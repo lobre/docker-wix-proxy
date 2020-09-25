@@ -1,0 +1,27 @@
+server {
+    listen 80;
+    server_name {{ getenv "HOST" "example.com" }};
+
+    location / {
+        proxy_pass https://{{ getenv "WIX_USER" "myuser" }}.wixsite.com/{{ getenv "WIX_SITE" "mysite" }}$uri$is_args$args;
+
+        resolver 8.8.8.8;
+
+        proxy_set_header Host {{ getenv "WIX_USER" "myuser" }}.wixsite.com;
+        proxy_set_header Referer {{ getenv "WIX_USER" "myuser" }}.wixsite.com;
+
+        proxy_set_header User-Agent $http_user_agent;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header Accept-Encoding "";
+        proxy_set_header Accept-Language $http_accept_language;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        
+        sub_filter https://{{ getenv "WIX_USER" "myuser" }}.wixsite.com/{{ getenv "WIX_SITE" "mysite" }} {{ getenv "PROTO" "http" }}://{{ getenv "HOST" "example.com" }};
+        sub_filter 'id="WIX_ADS"' 'style="display:none"';
+        sub_filter 'var publicModel = {"domain":"wixsite.com","externalBaseUrl":"https:\/\/{{ getenv "WIX_USER" "myuser" }}.wixsite.com\/{{ getenv "WIX_SITE" "mysite" }}","unicodeExternalBaseUrl":"https:\/\/{{ getenv "WIX_USER" "myuser" }}.wixsite.com\/{{ getenv "WIX_SITE" "mysite" }}"}' 'var publicModel = {"domain":"{{ getenv "HOST" "example.com" }}","externalBaseUrl":"http:\/\/{{ getenv "HOST" "example.com" }}","unicodeExternalBaseUrl":"http:\/\/{{ getenv "HOST" "example.com" }}"}';
+        sub_filter_once off;
+        sub_filter_types application/javascript application/x-javascript text/javascript;
+
+        proxy_ssl_server_name on;
+    }
+}
